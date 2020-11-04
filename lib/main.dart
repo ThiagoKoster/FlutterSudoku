@@ -95,7 +95,6 @@ class SudokuBoard extends StatelessWidget {
 
 class SudokuCell extends StatelessWidget {
   final int row, col;
-  final int value = 0;
   final List<SudokuCell> neighbors = List<SudokuCell>();
   SudokuCell(this.row, this.col);
 
@@ -104,31 +103,37 @@ class SudokuCell extends StatelessWidget {
     return InkResponse(
       enableFeedback: true,
       onTap: () {
-        debugPrint('Setting ($row, $col) to active_number');
+        Provider.of<SudokuChangeNotifier>(context, listen: false)
+            .setBoardCell(this.row, this.col);
       },
       child: SizedBox(
         width: 30,
         height: 30,
-        child: Container(
-          child: Center(
-            child: Text(value.toString()),
-          ),
+        child: Selector<SudokuChangeNotifier, String>(
+          builder: (_, data, __) {
+            debugPrint('Seting \'$data\' to ($row,$col)');
+            return Center(
+              child: Text(data),
+            );
+          },
+          selector: (_, sudokuChangeNotifier) =>
+              sudokuChangeNotifier.getBoardCell(this.row, this.col),
         ),
       ),
     );
   }
 }
 
-class SudokuChangeNotifier extends ChangeNotifier {
+class SudokuChangeNotifier with ChangeNotifier {
   List<List<int>> board = List.generate(9, (_) => List.generate(9, (_) => 0));
   final generator = SudokuGenerator();
 
   String getBoardCell(int row, int col) {
-    return this.board[row][col].toString();
+    return this.board[row][col] == 0 ? '' : this.board[row][col].toString();
   }
 
   void setBoardCell(int row, int col) {
-    this.board[row][col] = 1;
+    this.board[row][col] = 9;
     notifyListeners();
   }
 
