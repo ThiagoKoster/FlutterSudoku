@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -95,8 +97,17 @@ class SudokuBoard extends StatelessWidget {
 
 class SudokuCell extends StatelessWidget {
   final int row, col;
-  final List<SudokuCell> neighbors = List<SudokuCell>();
+  int val = 0;
+  List<int> neighborsValues;
   SudokuCell(this.row, this.col);
+
+  set neighbors(List<int> neighbors) {
+    this.neighborsValues = neighbors;
+  }
+
+  List<int> get neighbors {
+    return neighborsValues;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,30 +136,126 @@ class SudokuCell extends StatelessWidget {
 }
 
 class SudokuChangeNotifier with ChangeNotifier {
-  List<List<int>> board = List.generate(9, (_) => List.generate(9, (_) => 0));
-  final generator = SudokuGenerator();
+  List<List<SudokuCell>> board = List.generate(
+      9, (col) => List.generate(9, (row) => SudokuCell(row, col)));
 
   String getBoardCell(int row, int col) {
-    return this.board[row][col] == 0 ? '' : this.board[row][col].toString();
+    return this.board[row][col].val == 0
+        ? ''
+        : this.board[row][col].val.toString();
   }
 
   void setBoardCell(int row, int col) {
-    this.board[row][col] = 9;
+    this.board[row][col].val = 9;
+    debugPrint(this.board[row][col].neighbors.toString());
     notifyListeners();
   }
 
-  void generateBoard() {
-    generator.generateSudoku(this.board);
+  void generateSudokuAsync() {
+    debugPrint('Generating board...');
+
+    solve(0, 0);
     notifyListeners();
+
+    debugPrint('Done...');
+    debugPrint((this.board[0].map((e) => e.val)).toString());
+  }
+
+  List<int> randomNumberList() {
+    Random rdn = new Random();
+    List<int> list = new List<int>();
+    for (int i = 0; i < 9; i++) {
+      int n = rdn.nextInt(9) + 1;
+      while (list.contains(n)) {
+        n = rdn.nextInt(9) + 1;
+      }
+      list.add(n);
+    }
+
+    return list;
+  }
+
+  bool solve(int row, int col) {
+    if (col == 9) return true;
+
+    var digits = randomNumberList();
+    //TODO: Sempre gera o mesmo sudoku, pois pega o valor começando com 1. O ideal seria ser aleatório.
+    for (int i = 0; i < 9; i++) {
+      this.board[row][col].val = digits[i];
+
+      if (isValid(row, col)) {
+        if (row == 8) {
+          //If reached at last row then move to starting of next column
+          if (solve(0, col + 1)) return true;
+        } else {
+          if (solve(row + 1, col)) return true;
+        }
+      }
+    }
+
+    this.board[row][col].val = 0;
+    return false;
+  }
+
+//Function to check if the current placement in
+  //board[row][column] is valid or not
+  bool isValid(int row, int column) {
+    //Checking he column (horizontal)
+    for (int i = 0; i < 9; i++) {
+      if ((this.board[row][i].val == this.board[row][column].val) &&
+          (i != column)) return false;
+    }
+    //Checking the row (vertical)
+    for (int i = 0; i < 9; i++) {
+      if ((this.board[i][column].val == this.board[row][column].val) &&
+          (i != row)) return false;
+    }
+    //Computing starting point of the current Grid
+    int sr = (row ~/ 3) * 3;
+    int sc = (column ~/ 3) * 3;
+    //Checking the grid (3x3)
+    for (int i = sr; i < sr + 3; i++) {
+      for (int j = sc; j < sc + 3; j++) {
+        if (this.board[row][column].val == this.board[i][j].val &&
+            (row != i) &&
+            (column != j)) return false;
+      }
+    }
+    return true;
+  }
+
+  List<int> getCellNeighbours(int row, int col) {
+    //TODO: Melhorar como está sendo pegos os vizinhos.
+    var neighbours = new List<int>();
+    for (int i = 0; i < 9; i++) {
+      if (i != row) neighbours.add(this.board[i][col].val);
+      if (i != col) neighbours.add(this.board[row][i].val);
+    }
+
+    int sqx0 = col ~/ 3 * 3;
+    int sqx1 = sqx0 + 3;
+
+    int sqy0 = row ~/ 3 * 3;
+    int sqy1 = sqy0 + 3;
+
+    for (int i = sqy0; i < sqy1; i++) {
+      for (int j = sqx0; j < sqx1; j++) {
+        if (i != row || j != col) neighbours.add(this.board[i][j].val);
+      }
+    }
+
+    return neighbours;
   }
 
   void resetBoard() {
     debugPrint('Reseting board...');
-    this.board = List.generate(9, (_) => List.generate(9, (_) => 0));
+    for (int i = 0; i < 9; i++) {
+      for (int j = 0; j < 9; j++) {
+        this.board[i][j].val = 0;
+      }
+    }
     notifyListeners();
-  }
-}
 
-class SudokuGenerator {
-  void generateSudoku(List<List<int>> board) {}
+    generateSudokuAsync();
+  }
 }
