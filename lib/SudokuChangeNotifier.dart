@@ -5,6 +5,13 @@ import 'package:flutter/material.dart';
 import 'SudokuCell.dart';
 
 class SudokuChangeNotifier with ChangeNotifier {
+  int selectedValue = 0;
+
+  set select(int value) {
+    selectedValue = value;
+    notifyListeners();
+  }
+
   List<List<SudokuCell>> board = List.generate(
       9, (col) => List.generate(9, (row) => SudokuCell(row, col)));
 
@@ -15,7 +22,7 @@ class SudokuChangeNotifier with ChangeNotifier {
   }
 
   void setBoardCell(int row, int col) {
-    this.board[row][col].val = 9;
+    this.board[row][col].val = this.selectedValue;
     debugPrint(this.board[row][col].neighbors.toString());
     notifyListeners();
   }
@@ -102,5 +109,12 @@ class SudokuChangeNotifier with ChangeNotifier {
     notifyListeners();
 
     generateSudokuAsync();
+  }
+
+  Color getKeyColor(int val) {
+    if (val == selectedValue)
+      return Colors.blue;
+    else
+      return Colors.white;
   }
 }

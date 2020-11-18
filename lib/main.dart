@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'Keypad.dart';
 import 'SudokuBoard.dart';
 import 'SudokuChangeNotifier.dart';
 
@@ -43,7 +44,11 @@ class MyHomePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Container(margin: EdgeInsets.all(16.0), child: SudokuBoard())
+            Container(margin: EdgeInsets.all(16.0), child: SudokuBoard()),
+            Container(
+              margin: EdgeInsets.all(8.0),
+              child: Keypad(),
+            )
           ],
         ),
       ),
