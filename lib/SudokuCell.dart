@@ -6,6 +6,8 @@ import 'SudokuChangeNotifier.dart';
 class SudokuCell extends StatelessWidget {
   final int row, col;
   int val = 0;
+  bool setted = true;
+
   List<int> neighborsValues;
   SudokuCell(this.row, this.col);
 
@@ -20,25 +22,29 @@ class SudokuCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkResponse(
-      enableFeedback: true,
-      onTap: () {
-        Provider.of<SudokuChangeNotifier>(context, listen: false)
-            .setBoardCell(this.row, this.col);
-      },
-      child: SizedBox(
-        width: 30,
-        height: 30,
-        child: Selector<SudokuChangeNotifier, String>(
-          builder: (_, data, __) {
-            debugPrint('Seting \'$data\' to ($row,$col)');
-            return Center(
-              child: Text(data),
-            );
-          },
-          selector: (_, sudokuChangeNotifier) =>
-              sudokuChangeNotifier.getBoardCell(this.row, this.col),
-        ),
-      ),
-    );
+        enableFeedback: true,
+        onTap: () {
+          Provider.of<SudokuChangeNotifier>(context, listen: false)
+              .setBoardCell(this.row, this.col);
+        },
+        child: Container(
+          decoration: BoxDecoration(
+              color: Provider.of<SudokuChangeNotifier>(context)
+                  .getCellColor(this.row, this.col)),
+          child: SizedBox(
+            width: 30,
+            height: 30,
+            child: Selector<SudokuChangeNotifier, String>(
+              builder: (_, data, __) {
+                debugPrint('Seting \'$data\' to ($row,$col)');
+                return Center(
+                  child: Text(data),
+                );
+              },
+              selector: (_, sudokuChangeNotifier) =>
+                  sudokuChangeNotifier.getBoardCell(this.row, this.col),
+            ),
+          ),
+        ));
   }
 }

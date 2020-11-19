@@ -15,6 +15,9 @@ class SudokuChangeNotifier with ChangeNotifier {
   List<List<SudokuCell>> board = List.generate(
       9, (col) => List.generate(9, (row) => SudokuCell(row, col)));
 
+  List<List<Color>> cellColors =
+      List.generate(9, (_) => List.generate(9, (_) => Colors.grey));
+
   String getBoardCell(int row, int col) {
     return this.board[row][col].val == 0
         ? ''
@@ -22,6 +25,7 @@ class SudokuChangeNotifier with ChangeNotifier {
   }
 
   void setBoardCell(int row, int col) {
+    if (this.board[row][col].setted) return;
     this.board[row][col].val = this.selectedValue;
     debugPrint(this.board[row][col].neighbors.toString());
     notifyListeners();
@@ -31,10 +35,9 @@ class SudokuChangeNotifier with ChangeNotifier {
     debugPrint('Generating board...');
 
     solve(0, 0);
-    notifyListeners();
 
-    debugPrint('Done...');
-    debugPrint((this.board[0].map((e) => e.val)).toString());
+    removeSolvedCells();
+    notifyListeners();
   }
 
   List<int> randomNumberList() {
@@ -72,7 +75,7 @@ class SudokuChangeNotifier with ChangeNotifier {
     return false;
   }
 
-//Function to check if the current placement in
+  //Function to check if the current placement in
   //board[row][column] is valid or not
   bool isValid(int row, int column) {
     //Checking the column (horizontal)
@@ -100,6 +103,12 @@ class SudokuChangeNotifier with ChangeNotifier {
   }
 
   void resetBoard() {
+    this.board = List.generate(
+        9, (col) => List.generate(9, (row) => SudokuCell(row, col)));
+
+    this.cellColors =
+        List.generate(9, (_) => List.generate(9, (_) => Colors.grey));
+
     debugPrint('Reseting board...');
     for (int i = 0; i < 9; i++) {
       for (int j = 0; j < 9; j++) {
@@ -116,5 +125,39 @@ class SudokuChangeNotifier with ChangeNotifier {
       return Colors.blue;
     else
       return Colors.white;
+  }
+
+  Color getCellColor(int row, int col) {
+    return this.cellColors[row][col];
+  }
+
+//TODO: Setted cell must be gray and cant be changed.
+//TODO: Check if board is solved.
+//TODO: Refactor code
+
+  void removeSolvedCells() {
+    int cellsToRemove = 30;
+
+    while (cellsToRemove > 0) {
+      for (int col = 0; col < 9; col++) {
+        for (int row = 0; row < 9; row++) {
+          if (cellsToRemove > 0 &&
+              this.board[row][col].val != 0 &&
+              removeCell()) {
+            this.board[row][col].val = 0;
+            this.cellColors[row][col] = Colors.white;
+            this.board[row][col].setted = false;
+            cellsToRemove -= 1;
+
+            notifyListeners();
+          }
+        }
+      }
+    }
+  }
+
+  bool removeCell() {
+    Random rdn = Random();
+    return rdn.nextInt(100) <= 20;
   }
 }
